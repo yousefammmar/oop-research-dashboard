@@ -1,0 +1,55 @@
+# Exports the research data on GitHub's servers and publishes the encrypted copy to the dashboard,
+# so the site stays fresh even when Yousef's Mac is off. Secrets: FIREBASE_READER_KEY (read-only
+# service account: Firestore viewer + GA4 viewer) and DASHBOARD_PASSPHRASE (same key the link carries).
+name: Export research data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours (UTC); GitHub may delay scheduled runs by some minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: export
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: yousefammmar/object_oriented_programming   # export tool + quiz answer key
+          path: oop
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Export from Firestore and GA4
+        env:
+          FIREBASE_READER_KEY: ${{ secrets.FIREBASE_READER_KEY }}
+        run: |
+          printf '%s' "$FIREBASE_READER_KEY" > "$RUNNER_TEMP/key.json"
+          DAY=$(TZ=Asia/Amman date +%F)
+          mkdir -p "$RUNNER_TEMP/export/$DAY"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/key.json" node oop/tools/export_research.cjs --out "$RUNNER_TEMP/export/$DAY" | tee "$RUNNER_TEMP/export/$DAY/summary.txt"
+          rm -f "$RUNNER_TEMP/key.json"
+
+      - name: Encrypt for the dashboard
+        env:
+          DASHBOARD_PASS: ${{ secrets.DASHBOARD_PASSPHRASE }}
+        run: node tools/build-data.cjs --src "$RUNNER_TEMP/export" --out exports --notes NOTES.md
+
+      - name: Publish
+        run: |
+          git config user.name "research-export"
+          git config user.email "research-export@users.noreply.github.com"
+          git add exports
+          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
+          git commit -m "Export $(TZ=Asia/Amman date '+%Y-%m-%d %H:%M')"
+          git push || { git fetch -q origin && git rebase -X theirs origin/main && git push; }
