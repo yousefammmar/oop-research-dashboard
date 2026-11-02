@@ -1,6 +1,8 @@
-# Exports the research data on GitHub's servers and publishes the encrypted copy to the dashboard,
-# so the site stays fresh even when Yousef's Mac is off. Secrets: FIREBASE_READER_KEY (read-only
-# service account: Firestore viewer + GA4 viewer) and DASHBOARD_PASSPHRASE (same key the link carries).
+# Exports the research data on GitHub's servers and publishes it to the dashboard, so the site stays
+# fresh even when Yousef's Mac is off. Secret: FIREBASE_READER_KEY (read-only service account:
+# Firestore viewer + GA4 viewer). The data is published unencrypted (--plain) by Yousef's decision:
+# anyone with the link sees it. To put a passphrase back: drop --plain, add the DASHBOARD_PASSPHRASE
+# secret and pass it as DASHBOARD_PASS (see tools/build-data.cjs).
 name: Export research data
 
 on:
@@ -40,10 +42,8 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/key.json" node oop/tools/export_research.cjs --out "$RUNNER_TEMP/export/$DAY" | tee "$RUNNER_TEMP/export/$DAY/summary.txt"
           rm -f "$RUNNER_TEMP/key.json"
 
-      - name: Encrypt for the dashboard
-        env:
-          DASHBOARD_PASS: ${{ secrets.DASHBOARD_PASSPHRASE }}
-        run: node tools/build-data.cjs --src "$RUNNER_TEMP/export" --out exports --notes NOTES.md
+      - name: Build the dashboard data
+        run: node tools/build-data.cjs --src "$RUNNER_TEMP/export" --out exports --notes NOTES.md --plain
 
       - name: Publish
         run: |

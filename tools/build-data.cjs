@@ -4,8 +4,9 @@
  *   <out>/<day>/data.js   the CSVs + summary.txt + notes, AES-256-GCM encrypted (key from the passphrase, PBKDF2)
  *   <out>/index.js        every day that has a data.js, newest first (days already in <out> are kept)
  *
- *   node tools/build-data.cjs --src <dir with YYYY-MM-DD/ folders> --out exports [--notes NOTES.md]
- *   passphrase: env DASHBOARD_PASS, or --pass-file <file>
+ *   node tools/build-data.cjs --src <dir with YYYY-MM-DD/ folders> --out exports [--notes NOTES.md] --plain
+ *   --plain: no encryption, the dashboard opens with no passphrase (anyone with the link sees the data)
+ *   otherwise passphrase: env DASHBOARD_PASS, or --pass-file <file>
  *
  * Run by .github/workflows/export.yml on GitHub and by "Export data.command" on Yousef's Mac.
  */
@@ -18,8 +19,9 @@ const opt = (n, f) => { const i = args.indexOf(n); return i === -1 ? f : args[i 
 const src = path.resolve(opt('--src', 'export'));
 const out = path.resolve(opt('--out', 'exports'));
 const read = (f) => (f && fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '');
-const pass = process.env.DASHBOARD_PASS || read(opt('--pass-file')).trim();
-if (!pass) { console.error('build-data: no passphrase (set DASHBOARD_PASS or --pass-file)'); process.exit(1); }
+const plain = args.includes('--plain');
+const pass = plain ? '' : process.env.DASHBOARD_PASS || read(opt('--pass-file')).trim();
+if (!plain && !pass) { console.error('build-data: no passphrase (set DASHBOARD_PASS or --pass-file, or pass --plain)'); process.exit(1); }
 
 const FILES = { participants: 'research_participants.csv', sessions: 'research_sessions.csv', attempts: 'research_quiz_attempts.csv', summary: 'summary.txt' };
 const ITERATIONS = 300000;
@@ -40,10 +42,10 @@ srcDays.forEach((d) => {
   const data = { notes };
   Object.keys(FILES).forEach((k) => { data[k] = read(path.join(src, d, FILES[k])); });
   fs.mkdirSync(path.join(out, d), { recursive: true });
-  fs.writeFileSync(path.join(out, d, 'data.js'), js(d, { enc: encrypt(JSON.stringify(data)) }));
+  fs.writeFileSync(path.join(out, d, 'data.js'), js(d, plain ? data : { enc: encrypt(JSON.stringify(data)) }));
 });
 const kept = fs.existsSync(out) ? fs.readdirSync(out).filter((d) => isDay(d) && fs.existsSync(path.join(out, d, 'data.js'))) : [];
 const days = [...new Set(srcDays.concat(kept))].sort().reverse();
 fs.mkdirSync(out, { recursive: true });
 fs.writeFileSync(path.join(out, 'index.js'), 'window.EXPORT_DAYS = ' + JSON.stringify(days) + ';\n');
-console.log('build-data: encrypted ' + srcDays.length + ' export(s) from ' + src + '; ' + days.length + ' listed in ' + path.join(out, 'index.js'));
+console.log('build-data: ' + (plain ? 'wrote (plain) ' : 'encrypted ') + srcDays.length + ' export(s) from ' + src + '; ' + days.length + ' listed in ' + path.join(out, 'index.js'));
