@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Data</title>
+<!-- Reads the files "Export data.command" writes into exports/ (plain on this Mac, encrypted on the website).
+     Nothing is sent anywhere. make-dashboard-data.cjs copies this file to site/index.html. -->
+<script src="exports/index.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #667085; --line: #e4e7ec;
+    --accent: #2f6fdf; --flag: #fff4d6; --ok: #1a7f4b; --bad: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111418; --card: #1a1f26; --text: #e6e9ef; --muted: #98a2b3; --line: #2b323c; --accent: #6ea0ff; --flag: #3a3016; --ok: #4ade80; --bad: #f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; background: var(--bg); color: var(--text); }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+  h1 { font-size: 18px; margin: 0; }
+  main { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+  .card b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+  .card span { color: var(--muted); font-size: 13px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .tab, button.btn { font: inherit; padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; }
+  .tab[aria-selected="true"], button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  input, select { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
+  input[type="search"] { margin-inline-start: auto; min-width: 200px; }
+  label.toggle { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .wrap { overflow: auto; max-height: 70vh; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; font-size: 13px; width: max-content; min-width: 100%; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: start; }
+  th { position: sticky; top: 0; background: var(--card); font-weight: 600; cursor: pointer; user-select: none; }
+  th[title] { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
+  td.num { text-align: end; font-variant-numeric: tabular-nums; }
+  td.missing { color: var(--muted); }
+  td.yes { color: var(--ok); } td.no { color: var(--bad); }
+  tr.flag td { background: var(--flag); }
+  .muted { color: var(--muted); font-size: 13px; }
+  .note { margin: 8px 0 0; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--flag); border: 1px solid var(--line); vertical-align: -1px; }
+  details { margin-top: 16px; }
+  details.help { margin: 0 0 16px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; }
+  details.help ul { margin: 6px 0 4px; padding-inline-start: 20px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+  form.lock { max-width: 360px; margin: 80px auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; display: grid; gap: 12px; }
+  form.lock input[type="password"] { font-family: ui-monospace, monospace; direction: ltr; }
+  .err { color: var(--bad); font-size: 13px; min-height: 1.2em; margin: 0; }
+  @media (max-width: 600px) { header, main { padding-inline: 16px; } input[type="search"] { min-width: 0; width: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>بيانات الدراسة</h1>
+  <label class="muted">التصدير: <select id="day"></select></label>
+</header>
+<main id="main"></main>
+
+<script>
+'use strict';
+
+/* ───── Readable names ───── */
+const TOPICS = { cpp: 'C++ Revision', classes: 'Class Basics', const: 'Const & Static', composition: 'Composition', dma: 'Dynamic Memory',
+  this: 'this Pointer', friend: 'Friend Functions', inheritance: 'Inheritance', polymorphism: 'Polymorphism', operators: 'Operator Overloading' };
+const QUIZ_STATUS = { not_started: 'ما بدأ', started: 'بدأ وما سلّم', completed: 'سلّم' };
+const END_SOURCE = { recorded: 'مسجّل', inferred: 'مستنتج', open: 'لسا مفتوحة' };
+
+/* Simple view: [csv column, label, kind, hint]. kind: id | min (seconds → m:ss) | pct | score | yesno | date | topic | status | end | n */
+const SIMPLE = {
+  participants: [
+    ['research_id', 'الطالب', 'id', 'كود الطالب (مجهول). نفس الكود موجود بالـ GA4 باسم participant_id'],
+    ['quiz_first_score_mean', 'علامة الكويز', 'score', 'المتغير التابع: متوسط علامة أول محاولة بكل موضوع، من 100. فاضي = ما عمل ولا كويز'],
+    ['quizzes_first_attempt', 'كويزات', 'n', 'كم موضوع عمل فيه كويز لأول مرة'],
+    ['sessions', 'جلسات', 'n', 'جلسات دراسة على صفحات المواضيع (Firebase)'],
+    ['topics_studied', 'مواضيع', 'n', 'كم موضوع فتح'],
+    ['engagement_time_seconds', 'وقت نشط', 'min', 'دقائق:ثواني. الوقت اللي كان فيه بيتحرك أو بيكتب، وبيوقف بعد 60 ثانية بدون حركة (Firebase)'],
+    ['page_views', 'صفحات', 'n', 'عدد مرات فتح صفحات المواضيع (Firebase)'],
+    ['max_scroll_depth_mean', 'نزول بالصفحة', 'pct', 'متوسط أبعد نقطة وصلها بالصفحة (%)'],
+    ['topics_completed', 'علّم مكتمل', 'n', 'مواضيع ضغط فيها "Mark as completed"'],
+    ['ga4_linked', 'GA4', 'yesno', 'هل إله بيانات بالـ GA4؟ فاضي = التصدير ما قدر يقرأ GA4'],
+    ['ga4_engagement_seconds', 'GA4 وقت', 'min', 'engagement time من GA4، دقائق:ثواني'],
+    ['ga4_views', 'GA4 صفحات', 'n', 'page views من GA4، بكل صفحات الموقع'],
+    ['ga4_sessions', 'GA4 جلسات', 'n', 'sessions من GA4'],
+    ['ga4_scroll_events', 'GA4 نزول', 'n', 'كم مرة وصل 90% من صفحة (GA4)'],
+    ['ga4_lesson_completions', 'GA4 مكتمل', 'n', 'ضغطات "Mark as completed" بكل الموقع (GA4)'],
+    ['ga4_lab_completions', 'GA4 labs', 'n', 'Labs علّمها مكتملة (GA4)'],
+    ['ga4_code_file_views', 'GA4 كود', 'n', 'ملفات كود فتحها (GA4)'],
+    ['ga4_resource_clicks', 'GA4 مصادر', 'n', 'مصادر تعلّم فتحها بكل الموقع (GA4)'],
+    ['ga4_device', 'الجهاز', 'text', 'الجهاز الأكثر استخداماً حسب GA4']
+  ],
+  sessions: [
+    ['research_id', 'الطالب', 'id', 'كود الطالب'],
+    ['topic_id', 'الموضوع', 'topic', 'صفحة الموضوع'],
+    ['session_started_at', 'بدأت', 'date', 'بتوقيت الأردن'],
+    ['engagement_time_seconds', 'وقت نشط', 'min', 'دقائق:ثواني'],
+    ['page_views', 'صفحات', 'n', 'مرات فتح الصفحة بهاي الجلسة'],
+    ['max_scroll_depth', 'نزول بالصفحة', 'pct', 'أبعد نقطة وصلها (%)'],
+    ['quiz_status', 'الكويز', 'status', 'هل عمل كويز بهاي الجلسة؟'],
+    ['quiz_score', 'العلامة', 'score', 'علامة أول محاولة بهاي الجلسة، من 100'],
+    ['quiz_prior_attempts', 'محاولات سابقة', 'n', 'كم مرة عمل كويز هاد الموضوع قبل هاي الجلسة. 0 = هاي أول مرة'],
+    ['quiz_score_verified', 'العلامة متحققة', 'yesno', 'السكربت أعاد حساب العلامة من الإجابات وطلعت نفسها'],
+    ['topic_completed', 'علّم مكتمل', 'yesno', 'ضغط "Mark as completed"'],
+    ['session_ended_at', 'انتهت', 'date', 'بتوقيت الأردن'],
+    ['session_end_source', 'كيف انتهت', 'end', 'مسجّل = الموقع سكّرها؛ مستنتج = ما رجع 30 دقيقة']
+  ],
+  attempts: [
+    ['research_id', 'الطالب', 'id', 'كود الطالب'],
+    ['topic_id', 'الموضوع', 'topic', 'صفحة الموضوع'],
+    ['attempt_number', 'المحاولة', 'n', 'رقم المحاولة جوا الجلسة'],
+    ['quiz_prior_attempts', 'محاولات سابقة', 'n', 'قبل هاي الجلسة. 0 = أول مرة'],
+    ['score_reported', 'العلامة', 'score', 'من 100'],
+    ['correct_count', 'صح', 'n', 'إجابات صحيحة من 8'],
+    ['score_verified', 'متحققة', 'yesno', 'العلامة انعاد حسابها وطلعت نفسها'],
+    ['submitted_at', 'سلّم', 'date', 'بتوقيت الأردن'],
+    ['duration_seconds', 'المدة', 'min', 'من فتح الكويز للتسليم']
+  ]
+};
+const TABS = [['participants', 'الطلاب'], ['sessions', 'الجلسات'], ['attempts', 'محاولات الكويز']];
+const state = { day: null, tab: 'participants', sort: null, dir: 1, q: '', raw: false };
+const $ = (id) => document.getElementById(id);
+
+function el(tag, attrs, kids) {
+  const n = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => { if (k === 'text') n.textContent = v; else if (k.startsWith('on')) n[k] = v; else n.setAttribute(k, v); });
+  (kids || []).forEach((k) => n.append(k));
+  return n;
+}
+
+/** RFC 4180 CSV → { head: [...], rows: [[...]] } */
+function parseCSV(text) {
+  const rows = [];
+  let row = [], cell = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') quoted = false; else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  const head = rows.shift() || [];
+  return { head, rows: rows.filter((r) => r.length > 1 || r[0] !== '') };
+}
+
+const isNum = (v) => /^-?\d+(\.\d+)?$/.test(v);
+const fmtDate = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Amman', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const localDate = (utc) => fmtDate.format(new Date(utc.replace(' ', 'T') + 'Z')); // "1 Nov, 10:11"
+const mmss = (s) => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
+
+/** Cell for the simple view: [text, class, title] */
+function show(v, kind) {
+  if (v === '') return ['—', 'missing', ''];
+  switch (kind) {
+    case 'id': return [v.slice(0, 6), '', v];
+    case 'min': return [mmss(Number(v)), 'num', v + ' ثانية'];
+    case 'pct': return [Math.round(Number(v)) + '%', 'num', v];
+    case 'score': return [Math.round(Number(v)) + '', 'num', v + ' من 100'];
+    case 'yesno': return v === '1' ? ['✓', 'yes', ''] : ['✗', 'no', ''];
+    case 'date': return [localDate(v), '', v + ' UTC'];
+    case 'topic': return [TOPICS[v] || v, '', v];
+    case 'status': return [QUIZ_STATUS[v] || v, '', v];
+    case 'end': return [END_SOURCE[v] || v, '', v];
+    default: return [v, isNum(v) ? 'num' : '', ''];
+  }
+}
+
+/* ───── Encrypted exports (the website): AES-256-GCM, key from the passphrase with PBKDF2 ───── */
+const PASS_KEY = 'research-pass';
+const savedPass = () => sessionStorage.getItem(PASS_KEY) || localStorage.getItem(PASS_KEY) || '';
+
+async function decrypt({ salt, iv, ct, iterations }, pass) {
+  const b = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b(salt), iterations, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(iv) }, key, b(ct))));
+}
+
+function askPass(day, wrong) {
+  const input = el('input', { type: 'password', autocomplete: 'current-password', placeholder: 'كلمة السر', required: '' });
+  const remember = el('input', { type: 'checkbox' });
+  const err = el('p', { class: 'err', text: wrong ? 'كلمة السر غلط. جرّب مرة ثانية.' : '' });
+  const form = el('form', { class: 'lock' }, [
+    el('b', { text: 'البيانات مقفولة' }),
+    el('span', { class: 'muted', text: 'اكتب كلمة السر اللي بعتها يوسف. التشفير بينفك جوا متصفحك بس.' }),
+    input, err,
+    el('label', { class: 'toggle' }, [remember, 'تذكّرني على هاد الجهاز']),
+    el('button', { class: 'btn primary', type: 'submit', text: 'فتح' })
+  ]);
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      EXPORTS[day] = await decrypt(EXPORTS[day].enc, input.value);
+      (remember.checked ? localStorage : sessionStorage).setItem(PASS_KEY, input.value);
+      render();
+    } catch (_) { askPass(day, true); }
+  };
+  $('main').replaceChildren(form);
+  input.focus();
+}
+
+/* ───── Loading ───── */
+function loadDay(day) {
+  state.day = day;
+  const go = async () => {
+    const d = EXPORTS[day];
+    if (d && d.enc) {
+      if (!savedPass()) return askPass(day);
+      try { EXPORTS[day] = await decrypt(d.enc, savedPass()); } catch (_) { return askPass(day, true); }
+    }
+    render();
+  };
+  if (window.EXPORTS && EXPORTS[day]) return go();
+  const s = el('script', { src: 'exports/' + day + '/data.js' });
+  s.onload = go;
+  s.onerror = () => message('ما قدرت أقرأ تصدير ' + day + '. شغّل Export data.command مرة ثانية.');
+  document.head.append(s);
+}
+
+function message(text) { $('main').replaceChildren(el('div', { class: 'empty', text })); }
+
+/* ───── Rendering ───── */
+function render() {
+  const data = EXPORTS[state.day];
+  const t = { participants: parseCSV(data.participants), sessions: parseCSV(data.sessions), attempts: parseCSV(data.attempts) };
+  const P = t.participants;
+  const col = (name) => P.head.indexOf(name);
+  const count = (fn) => P.rows.filter(fn).length;
+  const n = P.rows.length;
+  const fetched = P.rows.some((r) => r[col('ga4_linked')] !== '');
+  const withQuiz = count((r) => Number(r[col('quizzes_first_attempt')]) > 0);
+  const withGa4 = count((r) => r[col('ga4_linked')] === '1');
+  const of = (k) => (n ? k + ' من ' + n : '0');
+  const cards = [
+    [n, 'طالب مشارك'],
+    [of(withQuiz), 'عملوا كويز'],
+    [fetched ? of(withGa4) : '—', fetched ? 'إلهم بيانات بالـ GA4' : 'GA4 ما انقرأ بهاد التصدير'],
+    [t.sessions.rows.length, 'جلسة دراسة'],
+    [t.attempts.rows.length, 'محاولة كويز']
+  ].map(([v, label]) => el('div', { class: 'card' }, [el('b', { text: String(v) }), el('span', { text: label })]));
+
+  const help = el('details', { class: 'help' }, [
+    el('summary', { text: 'كيف تقرأ هاي الصفحة؟' }),
+    el('ul', {}, [
+      'كل طالب إله كود عشوائي بدل اسمه. نفس الكود بالـ Firebase وبالـ GA4، وهيك منربط الجلسات والكويزات بأرقام GA4.',
+      '"علامة الكويز" هي متوسط أول محاولة بكل موضوع. الإعادات ما بتنحسب، وفاضي يعني ما عمل ولا كويز.',
+      'الأعمدة اللي اسمها بيبدأ بـ GA4 جاية من Google Analytics، والباقي من الموقع نفسه (Firebase).',
+      'الوقت مكتوب دقائق:ثواني، والتواريخ بتوقيت الأردن. مرّر الماوس على أي عمود أو كود عشان تشوف التفاصيل.',
+      'السطر الملوّن = طالب ما إله بيانات GA4 أو ما عمل كويز، فما بينفع للتحليل الأساسي.',
+      'بدك أسماء الأعمدة الأصلية زي ما هي بملف الـ CSV؟ علّم "كل الأعمدة".'
+    ].map((s) => el('li', { text: s })))
+  ]);
+
+  const tabs = TABS.map(([key, label]) => el('button', {
+    class: 'tab', role: 'tab', 'aria-selected': String(state.tab === key),
+    text: label + ' (' + t[key].rows.length + ')',
+    onclick: () => { state.tab = key; state.sort = null; render(); }
+  }));
+  const raw = el('input', { type: 'checkbox' });
+  raw.checked = state.raw;
+  raw.onchange = () => { state.raw = raw.checked; state.sort = null; render(); };
+  const search = el('input', { type: 'search', placeholder: 'بحث…', value: state.q });
+  search.oninput = () => { state.q = search.value; $('table').replaceChildren(table(t[state.tab])); };
+
+  const kids = [
+    el('div', { class: 'cards' }, cards), help,
+    el('div', { class: 'bar', role: 'tablist' }, tabs.concat(el('label', { class: 'toggle' }, [raw, 'كل الأعمدة']), search)),
+    el('div', { class: 'wrap', id: 'table' }, [table(t[state.tab])]),
+    el('p', { class: 'muted note' }, state.tab === 'participants'
+      ? [el('span', { class: 'swatch' }), ' سطر ملوّن = ما إله بيانات GA4 أو ما عمل كويز. اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.']
+      : ['اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.']),
+    el('details', {}, [el('summary', { text: 'ملخص التصدير (summary.txt)' }), el('pre', { dir: 'ltr', text: data.summary || '—' })])
+  ];
+  if (savedPass()) kids.push(el('p', { class: 'muted note' }, [el('a', { href: '#', text: 'نسيان كلمة السر على هاد الجهاز', onclick: (e) => { e.preventDefault(); localStorage.removeItem(PASS_KEY); sessionStorage.removeItem(PASS_KEY); location.reload(); } })]));
+  $('main').replaceChildren(...kids);
+  if (document.activeElement !== search && state.q) search.focus();
+}
+
+function table({ head, rows }) {
+  const spec = state.raw ? head.map((h) => [h, h, 'raw', '']) : SIMPLE[state.tab].filter((c) => head.includes(c[0]));
+  const idx = spec.map((c) => head.indexOf(c[0]));
+  const q = state.q.trim().toLowerCase();
+  let list = q ? rows.filter((r) => r.some((v) => v.toLowerCase().includes(q)) || idx.some((i, k) => show(r[i], spec[k][2])[0].toLowerCase().includes(q))) : rows.slice();
+  if (state.sort !== null) {
+    const i = idx[state.sort];
+    list.sort((a, b) => {
+      if (a[i] === '' || b[i] === '') return (a[i] === '') - (b[i] === ''); // missing last
+      return (isNum(a[i]) && isNum(b[i]) ? a[i] - b[i] : a[i].localeCompare(b[i])) * state.dir;
+    });
+  }
+  const linked = head.indexOf('ga4_linked'), quiz = head.indexOf('quizzes_first_attempt');
+  const thead = el('tr', {}, spec.map(([, label, , hint], k) => {
+    const th = el('th', { text: label + (state.sort === k ? (state.dir > 0 ? ' ▲' : ' ▼') : '') });
+    if (hint) th.title = hint;
+    th.onclick = () => { state.dir = state.sort === k ? -state.dir : 1; state.sort = k; $('table').replaceChildren(table({ head, rows })); };
+    return th;
+  }));
+  const body = list.map((r) => {
+    const flag = state.tab === 'participants' && (r[linked] === '0' || r[quiz] === '0');
+    return el('tr', flag ? { class: 'flag' } : {}, idx.map((i, k) => {
+      const [text, cls, title] = state.raw ? [r[i] === '' ? '—' : r[i], r[i] === '' ? 'missing' : isNum(r[i]) ? 'num' : '', ''] : show(r[i], spec[k][2]);
+      return el('td', Object.assign({ text }, cls ? { class: cls } : {}, title ? { title } : {}));
+    }));
+  });
+  if (!body.length) body.push(el('tr', {}, [el('td', { colspan: String(spec.length), class: 'missing', text: rows.length ? 'ما في نتائج للبحث' : 'ما في بيانات' })]));
+  return el('table', {}, [el('thead', {}, [thead]), el('tbody', {}, body)]);
+}
+
+/* Start: list of exports from exports/index.js, newest first. */
+const days = window.EXPORT_DAYS || [];
+if (!days.length) {
+  message('ما في تصدير لسا. اعمل دبل كليك على Export data.command، وبعدين افتح هاي الصفحة مرة ثانية.');
+  $('day').disabled = true;
+} else {
+  $('day').replaceChildren(...days.map((d) => el('option', { value: d, text: d })));
+  $('day').onchange = () => loadDay($('day').value);
+  loadDay(days[0]);
+}
+</script>
+</body>
+</html>
