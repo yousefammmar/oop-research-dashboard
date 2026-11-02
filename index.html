@@ -338,6 +338,15 @@ function loadDay(day) {
 
 function message(text) { $('main').replaceChildren(el('div', { class: 'empty', text })); }
 
+/* ───── CSV downloads: the export's full files (not filtered by period), straight from the decrypted data ───── */
+const FILES = { students: ['participants', 'research_participants'], sessions: ['sessions', 'research_sessions'], attempts: ['attempts', 'research_quiz_attempts'] };
+function download(key) {
+  const [field, name] = FILES[key];
+  const a = el('a', { href: URL.createObjectURL(new Blob([EXPORTS[state.day][field]], { type: 'text/csv;charset=utf-8' })), download: name + '_' + state.day + '.csv' });
+  document.body.append(a); a.click(); a.remove();
+}
+const dlButton = (key, label) => el('button', { class: 'btn', type: 'button', title: 'ملف الـ CSV الكامل لتصدير ' + state.day + '، جاهز لـ SPSS', text: label, onclick: () => download(key) });
+
 /* ───── Overview pieces ───── */
 function card(k, v, s) { return el('div', { class: 'card' }, [el('div', { class: 'k', text: k }), el('b', { text: String(v) }), el('div', { class: 's', text: s || '' })]); }
 
@@ -471,6 +480,13 @@ function render() {
         card('جلسة دراسة', S.rows.length, A.rows.length + ' محاولة كويز')
       ]),
       el('div', { class: 'panel' }, [el('p', { class: 'summary', text: summaryText(S, st) })]),
+      el('div', { class: 'panel', style: 'margin-top:12px' }, [
+        el('h3', { text: 'تنزيل البيانات' }),
+        el('div', { class: 'toolbar', style: 'margin:0' }, [
+          dlButton('students', '⬇ الطلاب (CSV)'), dlButton('sessions', '⬇ الجلسات (CSV)'), dlButton('attempts', '⬇ محاولات الكويز (CSV)'),
+          el('span', { class: 'muted', text: 'ملفات تصدير ' + state.day + ' كاملة، بأسماء الأعمدة الأصلية. SPSS: File ← Import Data ← CSV.' })
+        ])
+      ]),
       el('div', { class: 'grid2', style: 'margin-top:12px' }, [
         el('div', { class: 'panel chart' }, [el('h3', { text: 'علامة الكويز لكل طالب (أول محاولة)' }), barChart(P)]),
         el('div', { class: 'panel chart' }, [el('h3', { text: 'وقت الـ GA4 مقابل علامة الكويز (نظرة أولية على RQ1)' }), scatter(P)])
@@ -501,7 +517,7 @@ function tableSection(key, title, sub, data, flagRows) {
   draw();
   return el('section', { id: key }, [
     el('h2', { text: title }, [el('small', { text: data.rows.length + ' سطر · ' + sub })]),
-    el('div', { class: 'toolbar' }, [el('label', { class: 'ctl' }, ['العرض ', view]), search]),
+    el('div', { class: 'toolbar' }, [el('label', { class: 'ctl' }, ['العرض ', view]), dlButton(key, '⬇ CSV'), search]),
     box,
     el('p', { class: 'muted note' }, flagRows
       ? [el('span', { class: 'swatch' }), ' سطر ملوّن = ما إله بيانات GA4 أو ما عمل كويز. اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.']
