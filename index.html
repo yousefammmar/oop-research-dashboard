@@ -3,47 +3,66 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Research Data</title>
+<title>OOP Research</title>
 <!-- Reads the files "Export data.command" writes into exports/ (plain on this Mac, encrypted on the website).
      Nothing is sent anywhere. make-dashboard-data.cjs copies this file to site/index.html. -->
 <script src="exports/index.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #667085; --line: #e4e7ec;
-    --accent: #2f6fdf; --flag: #fff4d6; --ok: #1a7f4b; --bad: #b42318;
+    --bg: #f3f4f6; --card: #fff; --side: #111827; --side-text: #cbd5e1; --side-active: #1f2937;
+    --text: #111827; --muted: #6b7280; --line: #e5e7eb; --accent: #4f46e5; --accent-soft: #eef2ff;
+    --ok: #15803d; --bad: #b91c1c; --flag: #fff7e6; --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .1);
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #111418; --card: #1a1f26; --text: #e6e9ef; --muted: #98a2b3; --line: #2b323c; --accent: #6ea0ff; --flag: #3a3016; --ok: #4ade80; --bad: #f87171; }
+    :root { --bg: #0f1117; --card: #171a21; --side: #0b0d12; --side-text: #9aa3b2; --side-active: #1c2130; --text: #e5e7eb; --muted: #9aa3b2;
+      --line: #262b36; --accent: #818cf8; --accent-soft: #1e2140; --ok: #4ade80; --bad: #f87171; --flag: #3a3016; --shadow: none; }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; background: var(--bg); color: var(--text); }
-  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
-  h1 { font-size: 18px; margin: 0; }
-  h2 { font-size: 16px; margin: 24px 0 8px; }
-  main { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
-  .card b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
-  .card span { color: var(--muted); font-size: 13px; }
-  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin: 0 0 12px; line-height: 1.8; }
-  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-  .chart { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
-  .chart h3 { font-size: 14px; margin: 0 0 6px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+  body { margin: 0; font: 14px/1.6 "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; background: var(--bg); color: var(--text); }
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+  aside { background: var(--side); color: var(--side-text); padding: 20px 14px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 18px; }
+  .brand { color: #fff; font-weight: 700; font-size: 16px; line-height: 1.3; padding: 0 8px; }
+  .brand small { display: block; color: var(--side-text); font-weight: 400; font-size: 12px; margin-top: 2px; }
+  nav a { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 9px 10px; border-radius: 8px; font-size: 14px; }
+  nav a:hover, nav a.active { background: var(--side-active); color: #fff; }
+  nav a .ic { width: 18px; text-align: center; opacity: .8; font-size: 13px; }
+  .side-foot { margin-top: auto; font-size: 12px; padding: 0 8px; line-height: 1.7; }
+  .content { min-width: 0; }
+  header.top { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); padding: 12px 28px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  header.top h1 { font-size: 17px; margin: 0; margin-inline-end: auto; }
+  .ctl { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  main { padding: 24px 28px 60px; max-width: 1500px; }
+  section { margin-bottom: 36px; }
+  h2 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: baseline; gap: 10px; }
+  h2 small { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .card .k { color: var(--muted); font-size: 12px; }
+  .card b { display: block; font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; margin: 2px 0; }
+  .card .s { color: var(--muted); font-size: 12px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .panel h3 { font-size: 14px; margin: 0 0 8px; }
+  .summary { line-height: 1.9; margin: 0; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
   .chart svg { width: 100%; height: auto; direction: ltr; display: block; }
-  .chart text { font: 11px system-ui, sans-serif; fill: var(--text); }
+  .chart text { font: 11px "IBM Plex Sans Arabic", system-ui, sans-serif; fill: var(--text); }
   .chart .axis { stroke: var(--line); }
+  .chart .grid { stroke: var(--line); stroke-dasharray: 3 3; }
+  .chart .track { fill: var(--accent-soft); }
   .chart .bar { fill: var(--accent); }
   .chart .dot { fill: var(--accent); opacity: .85; }
-  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .tab, button.btn { font: inherit; padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; }
-  .tab[aria-selected="true"], button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  input, select { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
+  .chart .hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  input, select, button { font: inherit; }
+  input, select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
   input[type="search"] { margin-inline-start: auto; min-width: 200px; }
-  label.toggle { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
-  .wrap { overflow: auto; max-height: 70vh; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  .wrap { overflow: auto; max-height: 70vh; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
   table { border-collapse: collapse; font-size: 13px; width: max-content; min-width: 100%; }
-  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: start; }
-  th { position: sticky; top: 0; background: var(--card); font-weight: 600; user-select: none; }
+  th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: start; }
+  th { position: sticky; top: 0; background: var(--card); font-weight: 600; color: var(--muted); font-size: 12px; user-select: none; }
   th.sortable { cursor: pointer; }
   th[title] { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
   td.num { text-align: end; font-variant-numeric: tabular-nums; }
@@ -53,23 +72,53 @@
   .muted { color: var(--muted); font-size: 13px; }
   .note { margin: 8px 0 0; }
   .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--flag); border: 1px solid var(--line); vertical-align: -1px; }
-  details { margin-top: 16px; }
-  details.help { margin: 0 0 16px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; }
-  details.help ul { margin: 6px 0 4px; padding-inline-start: 20px; }
-  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; }
+  .explain { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .explain .panel p { margin: 4px 0; }
+  .explain .tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-inline-start: 6px; }
+  .notes p { margin: 6px 0; } .notes h4 { margin: 12px 0 4px; font-size: 14px; } .notes ul { margin: 4px 0; padding-inline-start: 20px; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; }
   .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
-  form.lock { max-width: 360px; margin: 80px auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; display: grid; gap: 12px; }
+  form.lock { max-width: 360px; margin: 80px auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; display: grid; gap: 12px; box-shadow: var(--shadow); }
   form.lock input[type="password"] { font-family: ui-monospace, monospace; direction: ltr; }
+  button.btn { padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .err { color: var(--bad); font-size: 13px; min-height: 1.2em; margin: 0; }
-  @media (max-width: 600px) { header, main { padding-inline: 16px; } input[type="search"] { min-width: 0; width: 100%; } }
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    aside { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 12px 14px; }
+    nav { display: flex; flex-wrap: wrap; gap: 2px; } nav a { padding: 6px 8px; font-size: 13px; } .side-foot { display: none; }
+    header.top, main { padding-inline: 16px; }
+    input[type="search"] { min-width: 0; width: 100%; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>بيانات الدراسة</h1>
-  <label class="muted">التصدير: <select id="day"></select></label>
-</header>
-<main id="main"></main>
+<div class="app">
+  <aside>
+    <div class="brand">OOP Research<small>GA4 × نتائج التعلّم</small></div>
+    <nav id="nav">
+      <a href="#overview"><span class="ic">◧</span>نظرة عامة</a>
+      <a href="#topics"><span class="ic">▤</span>حسب الموضوع</a>
+      <a href="#students"><span class="ic">◉</span>الطلاب</a>
+      <a href="#sessions"><span class="ic">◷</span>الجلسات</a>
+      <a href="#attempts"><span class="ic">✎</span>محاولات الكويز</a>
+      <a href="#explain"><span class="ic">?</span>شو معنى الأرقام</a>
+      <a href="#notes"><span class="ic">✉</span>ملاحظات يوسف</a>
+    </nav>
+    <div class="side-foot" id="foot"></div>
+  </aside>
+  <div class="content">
+    <header class="top">
+      <h1>لوحة بيانات الدراسة</h1>
+      <label class="ctl">التصدير <select id="day"></select></label>
+      <label class="ctl">الفترة <select id="period">
+        <option value="all">كل الفترة</option><option value="7">آخر 7 أيام</option><option value="30">آخر 30 يوم</option><option value="custom">تاريخ محدد</option>
+      </select></label>
+      <span class="ctl" id="range" hidden>من <input type="date" id="from"> إلى <input type="date" id="to"></span>
+    </header>
+    <main id="main"></main>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -80,10 +129,9 @@ const TOPICS = { cpp: 'C++ Revision', classes: 'Class Basics', const: 'Const & S
 const QUIZ_STATUS = { not_started: 'ما بدأ', started: 'بدأ وما سلّم', completed: 'سلّم' };
 const END_SOURCE = { recorded: 'مسجّل', inferred: 'مستنتج', open: 'لسا مفتوحة' };
 
-/* Columns: [csv column, label, kind, hint, core]. kind: id | min (seconds → m:ss) | pct | score | yesno | date | topic | status | end | n | text.
-   core = shown in the default "الأساسي" view. */
+/* Columns: [column, label, kind, hint, core]. kind: id | min (seconds → m:ss) | pct | score | yesno | date | topic | status | end | n | text */
 const COLS = {
-  participants: [
+  students: [
     ['research_id', 'الطالب', 'id', 'كود الطالب (مجهول). نفس الكود موجود بالـ GA4 باسم participant_id', true],
     ['quiz_first_score_mean', 'علامة الكويز', 'score', 'المتغير التابع: متوسط علامة أول محاولة بكل موضوع، من 100. فاضي = ما عمل ولا كويز', true],
     ['quizzes_first_attempt', 'كويزات', 'n', 'كم موضوع عمل فيه كويز لأول مرة', true],
@@ -93,6 +141,7 @@ const COLS = {
     ['page_views', 'صفحات', 'n', 'عدد مرات فتح صفحات المواضيع (Firebase)'],
     ['max_scroll_depth_mean', 'نزول بالصفحة', 'pct', 'متوسط أبعد نقطة وصلها بالصفحة (%)'],
     ['topics_completed', 'علّم مكتمل', 'n', 'مواضيع ضغط فيها "Mark as completed"'],
+    ['quiz_attempts', 'كل المحاولات', 'n', 'كل محاولات الكويز مع الإعادات'],
     ['ga4_linked', 'GA4', 'yesno', 'هل إله بيانات بالـ GA4؟ فاضي = التصدير ما قدر يقرأ GA4', true],
     ['ga4_engagement_seconds', 'GA4 وقت', 'min', 'engagement time من GA4، دقائق:ثواني', true],
     ['ga4_views', 'GA4 صفحات', 'n', 'page views من GA4، بكل صفحات الموقع', true],
@@ -131,9 +180,8 @@ const COLS = {
     ['duration_seconds', 'المدة', 'min', 'من فتح الكويز للتسليم', true]
   ]
 };
-const TABS = [['participants', 'الطلاب'], ['sessions', 'الجلسات'], ['attempts', 'محاولات الكويز']];
 const VIEWS = [['core', 'الأساسي'], ['all', 'كل التفاصيل'], ['raw', 'الأعمدة الأصلية']];
-const state = { day: null, tab: 'participants', sort: null, dir: 1, q: '', view: 'core' };
+const state = { day: null, period: 'all', from: '', to: '', view: 'core', t: { students: {}, sessions: {}, attempts: {} } };
 const $ = (id) => document.getElementById(id);
 
 function el(tag, attrs, kids) {
@@ -169,13 +217,15 @@ function parseCSV(text) {
 
 const isNum = (v) => /^-?\d+(\.\d+)?$/.test(v);
 const fmtDate = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Amman', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-const localDate = (utc) => fmtDate.format(new Date(utc.replace(' ', 'T') + 'Z')); // "1 Nov, 10:11"
+const utc = (s) => new Date(s.replace(' ', 'T') + 'Z');
+const localDate = (s) => fmtDate.format(utc(s)); // "1 Nov, 10:11"
 const mmss = (s) => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+const r1 = (x) => Math.round(x * 10) / 10;
 
 /** Cell for the readable views: [text, class, title] */
 function show(v, kind) {
-  if (v === '') return ['—', 'missing', ''];
+  if (v === '' || v === undefined) return ['—', 'missing', ''];
   switch (kind) {
     case 'id': return [v.slice(0, 6), '', v];
     case 'min': return [mmss(Number(v)), 'num', v + ' ثانية'];
@@ -190,11 +240,50 @@ function show(v, kind) {
   }
 }
 
+/* ───── Period filter (Jordan time, UTC+3) ───── */
+function periodBounds() {
+  const day = 864e5, now = Date.now();
+  if (state.period === '7' || state.period === '30') return [now - Number(state.period) * day, Infinity];
+  if (state.period === 'custom') return [state.from ? Date.parse(state.from + 'T00:00:00+03:00') : -Infinity, state.to ? Date.parse(state.to + 'T23:59:59+03:00') : Infinity];
+  return null;
+}
+function inPeriod(bounds, s) { return !bounds || (s !== '' && utc(s) >= bounds[0] && utc(s) <= bounds[1]); }
+const periodLabel = () => ({ all: 'كل الفترة', 7: 'آخر 7 أيام', 30: 'آخر 30 يوم' })[state.period] || ((state.from || '…') + ' → ' + (state.to || '…'));
+
+/* ───── Per-student table, computed from the (filtered) sessions; GA4 columns joined from the export's participants file.
+   GA4 is a total since the study began, so it is shown only for "كل الفترة". ───── */
+function aggregate(S, P, filtered) {
+  const c = (n) => S.head.indexOf(n);
+  const by = {};
+  S.rows.forEach((r) => {
+    const id = r[c('research_id')];
+    const p = by[id] = by[id] || { id, sessions: 0, topics: new Set(), done: new Set(), scroll: [], first: [], time: 0, views: 0, attempts: 0 };
+    p.sessions++; p.topics.add(r[c('topic_id')]);
+    if (r[c('topic_completed')] === '1') p.done.add(r[c('topic_id')]);
+    if (r[c('max_scroll_depth')] !== '') p.scroll.push(Number(r[c('max_scroll_depth')]));
+    if (r[c('quiz_status')] === 'completed' && r[c('quiz_prior_attempts')] === '0' && r[c('quiz_score_verified')] === '1') p.first.push(Number(r[c('quiz_score')]));
+    p.time += Number(r[c('engagement_time_seconds')]) || 0; p.views += Number(r[c('page_views')]) || 0; p.attempts += Number(r[c('quiz_attempt_count')]) || 0;
+  });
+  const ga = {}, pid = P.head.indexOf('research_id');
+  P.rows.forEach((r) => { ga[r[pid]] = r; });
+  const gaCols = filtered ? [] : P.head.filter((h) => h.startsWith('ga4_'));
+  const head = ['research_id', 'quiz_first_score_mean', 'quizzes_first_attempt', 'sessions', 'topics_studied', 'engagement_time_seconds', 'page_views',
+    'max_scroll_depth_mean', 'topics_completed', 'quiz_attempts'].concat(gaCols);
+  const rows = Object.values(by).sort((a, b) => a.id.localeCompare(b.id)).map((p) => {
+    const g = ga[p.id];
+    return [p.id, p.first.length ? String(r1(mean(p.first))) : '', String(p.first.length), String(p.sessions), String(p.topics.size), String(p.time),
+      String(p.views), p.scroll.length ? String(r1(mean(p.scroll))) : '', String(p.done.size), String(p.attempts)]
+      .concat(gaCols.map((h) => (g ? g[P.head.indexOf(h)] : '')));
+  });
+  return { head, rows };
+}
+
 /* ───── Encrypted exports (the website): AES-256-GCM, key from the passphrase with PBKDF2.
    The passphrase comes from the link (#…), from this browser's storage, or from the lock form. ───── */
 const PASS_KEY = 'research-pass';
 const savedPass = () => sessionStorage.getItem(PASS_KEY) || localStorage.getItem(PASS_KEY) || '';
-const linkPass = () => decodeURIComponent(location.hash.slice(1));
+const linkPass = () => decodeURIComponent(location.hash.slice(1)).replace(/^#/, '');
+const isSectionHash = () => /^#?(overview|topics|students|sessions|attempts|explain|notes)$/.test(location.hash);
 
 async function decrypt({ salt, iv, ct, iterations }, pass) {
   const b = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
@@ -211,7 +300,7 @@ function askPass(day, wrong) {
     el('b', { text: 'البيانات مقفولة' }),
     el('span', { class: 'muted', text: 'افتح الصفحة من الرابط الكامل اللي بعته يوسف، أو اكتب كلمة السر. التشفير بينفك جوا متصفحك بس.' }),
     input, err,
-    el('label', { class: 'toggle' }, [remember, 'تذكّرني على هاد الجهاز']),
+    el('label', { class: 'ctl' }, [remember, 'تذكّرني على هاد الجهاز']),
     el('button', { class: 'btn primary', type: 'submit', text: 'فتح' })
   ]);
   form.onsubmit = async (e) => {
@@ -232,8 +321,8 @@ function loadDay(day) {
   const go = async () => {
     const d = EXPORTS[day];
     if (d && d.enc) {
-      if (linkPass()) { // the full link carries the key: no typing, and it is kept for next time
-        try { EXPORTS[day] = await decrypt(d.enc, linkPass()); localStorage.setItem(PASS_KEY, linkPass()); return render(); } catch (_) { /* fall through */ }
+      if (linkPass() && !isSectionHash()) { // the full link carries the key: no typing, and it is kept for next time
+        try { EXPORTS[day] = await decrypt(d.enc, linkPass()); localStorage.setItem(PASS_KEY, linkPass()); history.replaceState(null, '', location.pathname); return render(); } catch (_) { /* fall through */ }
       }
       if (!savedPass()) return askPass(day);
       try { EXPORTS[day] = await decrypt(d.enc, savedPass()); } catch (_) { return askPass(day, true); }
@@ -250,37 +339,43 @@ function loadDay(day) {
 function message(text) { $('main').replaceChildren(el('div', { class: 'empty', text })); }
 
 /* ───── Overview pieces ───── */
-function summaryText(P, S, stats) {
+function card(k, v, s) { return el('div', { class: 'card' }, [el('div', { class: 'k', text: k }), el('b', { text: String(v) }), el('div', { class: 's', text: s || '' })]); }
+
+function summaryText(S, st) {
   const topics = new Set(S.rows.map((r) => r[S.head.indexOf('topic_id')])).size;
-  const parts = ['شارك ' + stats.n + ' طالب، فتحوا ' + S.rows.length + ' جلسة دراسة على ' + topics + ' مواضيع.'];
-  parts.push(stats.withQuiz ? stats.withQuiz + ' منهم عملوا كويز، ومتوسط علامة أول محاولة ' + Math.round(stats.meanScore) + ' من 100.' : 'ولا واحد منهم عمل كويز لسا.');
-  parts.push(stats.fetched ? stats.withGa4 + ' منهم وصلت بياناتهم للـ GA4.' : 'الـ GA4 ما انقرأ بهاد التصدير.');
-  parts.push('الجاهزين للتحليل الأساسي، يعني عندهم كويز وبيانات GA4 مع بعض: ' + stats.both + ' طالب.');
+  const parts = [(st.filtered ? 'بهاي الفترة ' : '') + 'شارك ' + st.n + ' طالب، فتحوا ' + S.rows.length + ' جلسة دراسة على ' + topics + ' مواضيع.'];
+  parts.push(st.withQuiz ? st.withQuiz + ' منهم عملوا كويز، ومتوسط علامة أول محاولة ' + Math.round(st.meanScore) + ' من 100.' : 'ولا واحد منهم عمل كويز لسا.');
+  if (st.filtered) parts.push('أرقام GA4 إجمالية من بداية الدراسة، فبتظهر بس لما تختار "كل الفترة".');
+  else parts.push(st.fetched ? st.withGa4 + ' منهم وصلت بياناتهم للـ GA4، والجاهزين للتحليل الأساسي (كويز + GA4 مع بعض): ' + st.both + ' طالب.' : 'الـ GA4 ما انقرأ بهاد التصدير.');
   return parts.join(' ');
 }
 
 function barChart(P) {
   const id = P.head.indexOf('research_id'), sc = P.head.indexOf('quiz_first_score_mean');
   const pts = P.rows.filter((r) => r[sc] !== '').map((r) => [r[id], Number(r[sc])]).sort((a, b) => b[1] - a[1]);
-  if (!pts.length) return el('p', { class: 'muted', text: 'لسا ما في علامات كويز.' });
-  const H = pts.length * 22 + 8;
+  if (!pts.length) return el('p', { class: 'hint', text: 'لسا ما في علامات كويز.' });
+  const H = pts.length * 24 + 8;
   const kids = pts.map(([code, v], i) => {
-    const y = i * 22 + 4;
+    const y = i * 24 + 4;
     return [svg('text', { x: 62, y: y + 13, 'text-anchor': 'end', text: code.slice(0, 6) }),
-      svg('rect', { class: 'bar', x: 70, y, width: v * 3, height: 16, rx: 3 }, [svg('title', { text: code + ': ' + v })]),
-      svg('text', { x: 76 + v * 3, y: y + 13, text: Math.round(v) })];
+      svg('rect', { class: 'track', x: 70, y, width: 300, height: 16, rx: 4 }),
+      svg('rect', { class: 'bar', x: 70, y, width: v * 3, height: 16, rx: 4 }, [svg('title', { text: code + ': ' + v })]),
+      svg('text', { x: 378, y: y + 13, text: Math.round(v) })];
   }).flat();
   return svg('svg', { viewBox: '0 0 400 ' + H, role: 'img' }, kids);
 }
 
 function scatter(P) {
   const id = P.head.indexOf('research_id'), sc = P.head.indexOf('quiz_first_score_mean'), t = P.head.indexOf('ga4_engagement_seconds');
+  if (t === -1) return el('p', { class: 'hint', text: 'بتظهر بس مع "كل الفترة"، لأنه أرقام GA4 إجمالية.' });
   const pts = P.rows.filter((r) => r[sc] !== '' && r[t] !== '').map((r) => [r[id], Number(r[t]) / 60, Number(r[sc])]);
-  if (pts.length < 3) return el('p', { class: 'muted', text: 'بدها على الأقل 3 طلاب عندهم كويز وبيانات GA4. هلأ في ' + pts.length + '.' });
+  if (pts.length < 3) return el('p', { class: 'hint', text: 'بدها على الأقل 3 طلاب عندهم كويز وبيانات GA4. هلأ في ' + pts.length + '.' });
   const W = 400, H = 260, L = 40, B = 230, R = 390, T = 10;
   const maxX = Math.max(5, Math.ceil(Math.max(...pts.map((p) => p[1])) / 5) * 5);
   const x = (m) => L + (m / maxX) * (R - L), y = (s) => B - (s / 100) * (B - T);
-  const kids = [svg('line', { class: 'axis', x1: L, y1: B, x2: R, y2: B }), svg('line', { class: 'axis', x1: L, y1: T, x2: L, y2: B })];
+  const kids = [];
+  [25, 50, 75, 100].forEach((s) => kids.push(svg('line', { class: 'grid', x1: L, y1: y(s), x2: R, y2: y(s) })));
+  kids.push(svg('line', { class: 'axis', x1: L, y1: B, x2: R, y2: B }), svg('line', { class: 'axis', x1: L, y1: T, x2: L, y2: B }));
   [0, 50, 100].forEach((s) => kids.push(svg('text', { x: L - 6, y: y(s) + 4, 'text-anchor': 'end', text: s })));
   [0, maxX / 2, maxX].forEach((m) => kids.push(svg('text', { x: x(m), y: B + 14, 'text-anchor': 'middle', text: m })));
   kids.push(svg('text', { x: (L + R) / 2, y: H - 2, 'text-anchor': 'middle', text: 'دقائق engagement بالـ GA4' }));
@@ -299,8 +394,8 @@ function topicTable(S) {
     if (r[c('quiz_status')] === 'completed' && r[c('quiz_prior_attempts')] === '0' && r[c('quiz_score_verified')] === '1') t.scores.push(Number(r[c('quiz_score')]));
   });
   const order = Object.keys(TOPICS).filter((k) => by[k]).concat(Object.keys(by).filter((k) => !TOPICS[k]));
-  if (!order.length) return el('p', { class: 'muted', text: 'ما في جلسات لسا.' });
-  const cell = (v, cls) => el('td', Object.assign({ text: v === null ? '—' : String(v) }, { class: v === null ? 'missing' : cls || '' }));
+  if (!order.length) return el('p', { class: 'muted', text: 'ما في جلسات بهاي الفترة.' });
+  const cell = (v, cls) => el('td', { text: v === null ? '—' : String(v), class: v === null ? 'missing' : cls || '' });
   return el('div', { class: 'wrap' }, [el('table', {}, [
     el('thead', {}, [el('tr', {}, ['الموضوع', 'طلاب', 'جلسات', 'عملوا كويز', 'متوسط العلامة', 'متوسط الوقت النشط'].map((h) => el('th', { text: h })))]),
     el('tbody', {}, order.map((k) => {
@@ -311,106 +406,146 @@ function topicTable(S) {
   ])]);
 }
 
+/* ───── "What the numbers mean" ───── */
+const EXPLAIN = [
+  ['علامة الكويز', 'المتغير التابع', 'متوسط علامة الطالب بأول محاولة بكل موضوع (من 100). الإعادات ما بتنحسب، عشان نقيس شو تعلّم قبل ما يشوف الإجابات. كل محاولة بينعاد حساب علامتها من إجاباته، والمحاولات اللي ما بتتطابق بتنحذف.'],
+  ['GA4 وقت، GA4 صفحات، GA4 جلسات، GA4 نزول', 'المتغيرات المستقلة (RQ1، RQ2)', 'هاي أرقام Google Analytics الجاهزة اللي أي موقع بيشوفها: engagement time، page views، sessions، وكم مرة نزل لـ 90% من الصفحة. السؤال الأساسي: هل بتعكس التعلّم؟'],
+  ['GA4 مكتمل، GA4 labs، GA4 كود، GA4 مصادر', 'أحداث التعلّم (RQ3)', 'أحداث أضفناها للموقع عشان تقيس سلوك تعليمي محدد: علّم موضوع مكتمل، خلّص lab، فتح ملف كود، فتح مصدر. السؤال: هل بتفسّر العلامة أكثر من أرقام GA4 العادية؟'],
+  ['وقت نشط', 'للمقارنة مع GA4 (RQ4)', 'الموقع نفسه بيحسب وقت الطالب وهو فعلاً بيتحرك أو بيكتب، وبيوقف بعد دقيقة بدون حركة. بنقارنه مع "GA4 وقت" عشان نعرف قديش رقم GA4 دقيق.'],
+  ['الجهاز', 'متغير ضابط', 'desktop أو mobile أو tablet. بندخله بالتحليل عشان ما يخرّب العلاقة بين الوقت والعلامة.'],
+  ['جاهزين للتحليل', 'حجم العينة الفعلي', 'طالب عنده علامة كويز وبيانات GA4 مع بعض. هاد الرقم هو اللي بيحدد قديش التحليل قوي، وهدفنا يوصل 60 على الأقل.'],
+  ['الرسمة: GA4 وقت مقابل العلامة', 'كيف تقرأها', 'كل نقطة طالب. إذا النقاط بتطلع لفوق كل ما رحنا يمين، في علاقة موجبة: اللي بيقضي وقت أكثر بيجيب علامة أعلى. إذا مبعثرة، الوقت ما بيحكي كثير عن التعلّم. هاي نظرة أولية بس، والاختبار الحقيقي بـ SPSS.'],
+  ['السطر الملوّن', 'بجدول الطلاب', 'طالب ما إله بيانات GA4 أو ما عمل كويز. بيضل بالجداول، بس ما بيدخل بالتحليل الأساسي.']
+];
+
+/** Tiny markdown for NOTES.md: "# " headings, "- " bullets, blank line = new paragraph. */
+function notesView(text) {
+  if (!text || !text.trim()) return el('p', { class: 'muted', text: 'ما في ملاحظات لسا. يوسف بيكتبها بملف NOTES.md جوا مجلد Gathering data، وبتظهر هون مع التصدير الجاي.' });
+  const out = [];
+  let list = null, para = [];
+  const flush = () => { if (para.length) { out.push(el('p', { text: para.join(' ') })); para = []; } list = null; };
+  text.split('\n').forEach((line) => {
+    const l = line.trim();
+    if (!l) return flush();
+    if (l.startsWith('#')) { flush(); out.push(el('h4', { text: l.replace(/^#+\s*/, '') })); }
+    else if (/^[-*]\s/.test(l)) { if (para.length) flush(); if (!list) { list = el('ul'); out.push(list); } list.append(el('li', { text: l.slice(2) })); }
+    else { list = null; para.push(l); }
+  });
+  flush();
+  return el('div', { class: 'notes' }, out);
+}
+
 /* ───── Rendering ───── */
 function render() {
   const data = EXPORTS[state.day];
-  const t = { participants: parseCSV(data.participants), sessions: parseCSV(data.sessions), attempts: parseCSV(data.attempts) };
-  const P = t.participants;
+  const bounds = periodBounds();
+  const all = { sessions: parseCSV(data.sessions), attempts: parseCSV(data.attempts), participants: parseCSV(data.participants) };
+  const S = { head: all.sessions.head, rows: all.sessions.rows.filter((r) => inPeriod(bounds, r[all.sessions.head.indexOf('session_started_at')])) };
+  const A = { head: all.attempts.head, rows: all.attempts.rows.filter((r) => inPeriod(bounds, r[all.attempts.head.indexOf('submitted_at')])) };
+  const P = aggregate(S, all.participants, !!bounds);
+  const t = { students: P, sessions: S, attempts: A };
   const col = (name) => P.head.indexOf(name);
   const count = (fn) => P.rows.filter(fn).length;
-  const st = { n: P.rows.length };
-  st.fetched = P.rows.some((r) => r[col('ga4_linked')] !== '');
+  const st = { n: P.rows.length, filtered: !!bounds };
+  st.fetched = col('ga4_linked') !== -1 && P.rows.some((r) => r[col('ga4_linked')] !== '');
   st.withQuiz = count((r) => Number(r[col('quizzes_first_attempt')]) > 0);
-  st.withGa4 = count((r) => r[col('ga4_linked')] === '1');
-  st.both = count((r) => Number(r[col('quizzes_first_attempt')]) > 0 && r[col('ga4_linked')] === '1');
+  st.withGa4 = st.fetched ? count((r) => r[col('ga4_linked')] === '1') : null;
+  st.both = st.fetched ? count((r) => Number(r[col('quizzes_first_attempt')]) > 0 && r[col('ga4_linked')] === '1') : null;
   st.meanScore = mean(P.rows.filter((r) => r[col('quiz_first_score_mean')] !== '').map((r) => Number(r[col('quiz_first_score_mean')])));
   const of = (k) => (st.n ? k + ' من ' + st.n : '0');
-  const cards = [
-    [st.n, 'طالب مشارك'],
-    [of(st.withQuiz), 'عملوا كويز'],
-    [st.fetched ? of(st.withGa4) : '—', st.fetched ? 'إلهم بيانات بالـ GA4' : 'GA4 ما انقرأ بهاد التصدير'],
-    [of(st.both), 'جاهزين للتحليل'],
-    [st.meanScore === null ? '—' : Math.round(st.meanScore), 'متوسط علامة الكويز'],
-    [t.sessions.rows.length, 'جلسة دراسة']
-  ].map(([v, label]) => el('div', { class: 'card' }, [el('b', { text: String(v) }), el('span', { text: label })]));
+  const dates = all.sessions.rows.map((r) => r[all.sessions.head.indexOf('session_started_at')]).filter(Boolean).sort();
+  $('foot').replaceChildren(
+    el('div', { text: 'آخر تصدير: ' + state.day }),
+    el('div', { text: dates.length ? 'البيانات من ' + localDate(dates[0]).split(',')[0] + ' إلى ' + localDate(dates[dates.length - 1]).split(',')[0] : '' }),
+    el('div', { text: 'الفترة المعروضة: ' + periodLabel() }));
 
-  const help = el('details', { class: 'help' }, [
-    el('summary', { text: 'كيف تقرأ هاي الصفحة؟' }),
-    el('ul', {}, [
-      'كل طالب إله كود عشوائي بدل اسمه. نفس الكود بالـ Firebase وبالـ GA4، وهيك منربط الجلسات والكويزات بأرقام GA4.',
-      '"علامة الكويز" هي متوسط أول محاولة بكل موضوع. الإعادات ما بتنحسب، وفاضي يعني ما عمل ولا كويز.',
-      'الأعمدة اللي اسمها بيبدأ بـ GA4 جاية من Google Analytics، والباقي من الموقع نفسه (Firebase).',
-      'الوقت مكتوب دقائق:ثواني، والتواريخ بتوقيت الأردن. مرّر الماوس على أي عمود أو كود عشان تشوف التفاصيل.',
-      'السطر الملوّن = طالب ما إله بيانات GA4 أو ما عمل كويز، فما بينفع للتحليل الأساسي.',
-      '"الأساسي" بيعرض أهم الأعمدة، و"كل التفاصيل" كلها، و"الأعمدة الأصلية" أسماء الـ CSV زي ما هي لـ SPSS.'
-    ].map((s) => el('li', { text: s })))
-  ]);
-
-  const tabs = TABS.map(([key, label]) => el('button', {
-    class: 'tab', role: 'tab', 'aria-selected': String(state.tab === key),
-    text: label + ' (' + t[key].rows.length + ')',
-    onclick: () => { state.tab = key; state.sort = null; render(); }
-  }));
-  const view = el('select', {}, VIEWS.map(([v, label]) => el('option', { value: v, text: label })));
-  view.value = state.view;
-  view.onchange = () => { state.view = view.value; state.sort = null; render(); };
-  const search = el('input', { type: 'search', placeholder: 'بحث…', value: state.q });
-  search.oninput = () => { state.q = search.value; $('table').replaceChildren(table(t[state.tab])); };
-
-  const kids = [
-    el('div', { class: 'cards' }, cards),
-    el('p', { class: 'summary', text: summaryText(P, t.sessions, st) }),
-    help,
-    el('h2', { text: 'نظرة سريعة' }),
-    el('div', { class: 'charts' }, [
-      el('div', { class: 'chart' }, [el('h3', { text: 'علامة الكويز لكل طالب (أول محاولة)' }), barChart(P)]),
-      el('div', { class: 'chart' }, [el('h3', { text: 'وقت الـ GA4 مقابل علامة الكويز (نظرة أولية على RQ1)' }), scatter(P)])
+  const sections = [
+    el('section', { id: 'overview' }, [
+      el('h2', { text: 'نظرة عامة', }, [el('small', { text: periodLabel() })]),
+      el('div', { class: 'cards' }, [
+        card('طالب مشارك', st.n, 'فتحوا صفحة موضوع'),
+        card('عملوا كويز', of(st.withQuiz), 'أول محاولة، متحققة'),
+        card('إلهم بيانات بالـ GA4', st.fetched ? of(st.withGa4) : '—', st.filtered ? 'كل الفترة بس' : st.fetched ? 'الكود وصل للـ GA4' : 'GA4 ما انقرأ'),
+        card('جاهزين للتحليل', st.fetched ? of(st.both) : '—', 'كويز + GA4 مع بعض'),
+        card('متوسط علامة الكويز', st.meanScore === null ? '—' : Math.round(st.meanScore), 'من 100'),
+        card('جلسة دراسة', S.rows.length, A.rows.length + ' محاولة كويز')
+      ]),
+      el('div', { class: 'panel' }, [el('p', { class: 'summary', text: summaryText(S, st) })]),
+      el('div', { class: 'grid2', style: 'margin-top:12px' }, [
+        el('div', { class: 'panel chart' }, [el('h3', { text: 'علامة الكويز لكل طالب (أول محاولة)' }), barChart(P)]),
+        el('div', { class: 'panel chart' }, [el('h3', { text: 'وقت الـ GA4 مقابل علامة الكويز (نظرة أولية على RQ1)' }), scatter(P)])
+      ])
     ]),
-    el('h2', { text: 'حسب الموضوع' }),
-    topicTable(t.sessions),
-    el('h2', { text: 'التفاصيل' }),
-    el('div', { class: 'bar', role: 'tablist' }, tabs.concat(el('label', { class: 'toggle' }, ['العرض: ', view]), search)),
-    el('div', { class: 'wrap', id: 'table' }, [table(t[state.tab])]),
-    el('p', { class: 'muted note' }, state.tab === 'participants'
-      ? [el('span', { class: 'swatch' }), ' سطر ملوّن = ما إله بيانات GA4 أو ما عمل كويز. اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.']
-      : ['اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.']),
-    el('details', {}, [el('summary', { text: 'ملخص التصدير (summary.txt)' }), el('pre', { dir: 'ltr', text: data.summary || '—' })])
+    el('section', { id: 'topics' }, [el('h2', { text: 'حسب الموضوع' }), topicTable(S)]),
+    tableSection('students', 'الطلاب', 'سطر لكل طالب' + (st.filtered ? '، محسوب من جلسات الفترة المختارة (بدون GA4)' : '') + '.', t.students, true),
+    tableSection('sessions', 'الجلسات', 'سطر لكل جلسة دراسة على صفحة موضوع.', t.sessions),
+    tableSection('attempts', 'محاولات الكويز', 'سطر لكل محاولة، مع الإعادات.', t.attempts),
+    el('section', { id: 'explain' }, [el('h2', { text: 'شو معنى الأرقام' }), el('div', { class: 'explain' }, EXPLAIN.map(([k, tag, text]) =>
+      el('div', { class: 'panel' }, [el('h3', {}, [k, el('span', { class: 'tag', text: tag })]), el('p', { text })])))]),
+    el('section', { id: 'notes' }, [el('h2', { text: 'ملاحظات يوسف' }), el('div', { class: 'panel' }, [notesView(data.notes)])]),
+    el('details', {}, [el('summary', { class: 'muted', text: 'ملخص التصدير (summary.txt)' }), el('pre', { dir: 'ltr', text: data.summary || '—' })])
   ];
-  if (savedPass()) kids.push(el('p', { class: 'muted note' }, [el('a', { href: '#', text: 'نسيان كلمة السر على هاد الجهاز', onclick: (e) => { e.preventDefault(); localStorage.removeItem(PASS_KEY); sessionStorage.removeItem(PASS_KEY); history.replaceState(null, '', location.pathname); location.reload(); } })]));
-  $('main').replaceChildren(...kids);
-  if (document.activeElement !== search && state.q) search.focus();
+  if (savedPass()) sections.push(el('p', { class: 'muted note' }, [el('a', { href: '#', text: 'نسيان كلمة السر على هاد الجهاز', onclick: (e) => { e.preventDefault(); localStorage.removeItem(PASS_KEY); sessionStorage.removeItem(PASS_KEY); history.replaceState(null, '', location.pathname); location.reload(); } })]));
+  $('main').replaceChildren(...sections);
 }
 
-function table({ head, rows }) {
-  const raw = state.view === 'raw';
-  const spec = raw ? head.map((h) => [h, h, 'raw', '']) : COLS[state.tab].filter((c) => head.includes(c[0]) && (state.view === 'all' || c[4]));
+function tableSection(key, title, sub, data, flagRows) {
+  const ts = state.t[key];
+  const view = el('select', {}, VIEWS.map(([v, label]) => el('option', { value: v, text: label })));
+  view.value = state.view;
+  view.onchange = () => { state.view = view.value; Object.values(state.t).forEach((x) => { x.sort = null; }); render(); };
+  const search = el('input', { type: 'search', placeholder: 'بحث…', value: ts.q || '' });
+  const box = el('div', { class: 'wrap' });
+  const draw = () => box.replaceChildren(table(key, data, flagRows, draw));
+  search.oninput = () => { ts.q = search.value; draw(); };
+  draw();
+  return el('section', { id: key }, [
+    el('h2', { text: title }, [el('small', { text: data.rows.length + ' سطر · ' + sub })]),
+    el('div', { class: 'toolbar' }, [el('label', { class: 'ctl' }, ['العرض ', view]), search]),
+    box,
+    el('p', { class: 'muted note' }, flagRows
+      ? [el('span', { class: 'swatch' }), ' سطر ملوّن = ما إله بيانات GA4 أو ما عمل كويز. اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.']
+      : ['اضغط على اسم العمود للترتيب. (—) يعني ما في قيمة.'])
+  ]);
+}
+
+function table(key, { head, rows }, flagRows, redraw) {
+  const ts = state.t[key], raw = state.view === 'raw';
+  const spec = raw ? head.map((h) => [h, h, 'raw', '']) : COLS[key].filter((c) => head.includes(c[0]) && (state.view === 'all' || c[4]));
   const idx = spec.map((c) => head.indexOf(c[0]));
-  const q = state.q.trim().toLowerCase();
+  const q = (ts.q || '').trim().toLowerCase();
   let list = q ? rows.filter((r) => r.some((v) => v.toLowerCase().includes(q)) || idx.some((i, k) => show(r[i], spec[k][2])[0].toLowerCase().includes(q))) : rows.slice();
-  if (state.sort !== null) {
-    const i = idx[state.sort];
+  if (ts.sort !== null && ts.sort !== undefined) {
+    const i = idx[ts.sort];
     list.sort((a, b) => {
       if (a[i] === '' || b[i] === '') return (a[i] === '') - (b[i] === ''); // missing last
-      return (isNum(a[i]) && isNum(b[i]) ? a[i] - b[i] : a[i].localeCompare(b[i])) * state.dir;
+      return (isNum(a[i]) && isNum(b[i]) ? a[i] - b[i] : a[i].localeCompare(b[i])) * ts.dir;
     });
   }
   const linked = head.indexOf('ga4_linked'), quiz = head.indexOf('quizzes_first_attempt');
   const thead = el('tr', {}, spec.map(([, label, , hint], k) => {
-    const th = el('th', { class: 'sortable', text: label + (state.sort === k ? (state.dir > 0 ? ' ▲' : ' ▼') : '') });
+    const th = el('th', { class: 'sortable', text: label + (ts.sort === k ? (ts.dir > 0 ? ' ▲' : ' ▼') : '') });
     if (hint) th.title = hint;
-    th.onclick = () => { state.dir = state.sort === k ? -state.dir : 1; state.sort = k; $('table').replaceChildren(table({ head, rows })); };
+    th.onclick = () => { ts.dir = ts.sort === k ? -ts.dir : 1; ts.sort = k; redraw(); };
     return th;
   }));
   const body = list.map((r) => {
-    const flag = state.tab === 'participants' && (r[linked] === '0' || r[quiz] === '0');
+    const flag = flagRows && ((linked !== -1 && r[linked] === '0') || r[quiz] === '0');
     return el('tr', flag ? { class: 'flag' } : {}, idx.map((i, k) => {
       const [text, cls, title] = raw ? [r[i] === '' ? '—' : r[i], r[i] === '' ? 'missing' : isNum(r[i]) ? 'num' : '', ''] : show(r[i], spec[k][2]);
       return el('td', Object.assign({ text }, cls ? { class: cls } : {}, title ? { title } : {}));
     }));
   });
-  if (!body.length) body.push(el('tr', {}, [el('td', { colspan: String(spec.length), class: 'missing', text: rows.length ? 'ما في نتائج للبحث' : 'ما في بيانات' })]));
+  if (!body.length) body.push(el('tr', {}, [el('td', { colspan: String(spec.length), class: 'missing', text: rows.length ? 'ما في نتائج للبحث' : 'ما في بيانات بهاي الفترة' })]));
   return el('table', {}, [el('thead', {}, [thead]), el('tbody', {}, body)]);
 }
+
+/* ───── Controls ───── */
+const loaded = () => state.day && window.EXPORTS && EXPORTS[state.day] && !EXPORTS[state.day].enc;
+$('period').onchange = () => { state.period = $('period').value; $('range').hidden = state.period !== 'custom'; if (loaded()) render(); };
+$('from').onchange = () => { state.from = $('from').value; if (loaded()) render(); };
+$('to').onchange = () => { state.to = $('to').value; if (loaded()) render(); };
+document.querySelectorAll('#nav a').forEach((a) => { a.onclick = () => document.querySelectorAll('#nav a').forEach((x) => x.classList.toggle('active', x === a)); });
 
 /* Start: list of exports from exports/index.js, newest first. */
 const days = window.EXPORT_DAYS || [];
